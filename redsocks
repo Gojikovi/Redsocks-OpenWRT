@@ -8,40 +8,35 @@ PORT=1337
 # check if configuration exists
 [ -e "/etc/redsocks.conf" ] || exit 0
 
-iptable_start() {
-    /bin/echo -n "running proxy bypass iptables ..."
+nftables_start() {
+    /bin/echo -n "running proxy bypass nftables ..."
 
     # Run iptable commands
-    iptables -t nat -N REDSOCKS
+    nft add chain ip nat REDSOCKS
 
-    iptables -t nat -A REDSOCKS -d 0.0.0.0/8 -j RETURN
-    iptables -t nat -A REDSOCKS -d 10.0.0.0/8 -j RETURN
-    iptables -t nat -A REDSOCKS -d 127.0.0.0/8 -j RETURN
-    iptables -t nat -A REDSOCKS -d 169.254.0.0/16 -j RETURN
-#    iptables -t nat -A REDSOCKS -d 172.16.0.0/12 -j RETURN
-    iptables -t nat -A REDSOCKS -d 192.168.0.0/16 -j RETURN
-    iptables -t nat -A REDSOCKS -d 224.0.0.0/4 -j RETURN
-    iptables -t nat -A REDSOCKS -d 240.0.0.0/4 -j RETURN
+    nft add rule ip nat REDSOCKS ip daddr 0.0.0.0/8 counter return
+    nft add rule ip nat REDSOCKS ip daddr 10.0.0.0/8 counter return
+    nft add rule ip nat REDSOCKS ip daddr 127.0.0.0/8 counter return
+    nft add rule ip nat REDSOCKS ip daddr 169.254.0.0/16 counter return
+#    nft add rule ip nat REDSOCKS ip daddr 172.16.0.0/12 counter return
+    nft add rule ip nat REDSOCKS ip daddr 192.168.0.0/16 counter return
+    nft add rule ip nat REDSOCKS ip daddr 224.0.0.0/4 counter return
+    nft add rule ip nat REDSOCKS ip daddr 240.0.0.0/4 counter return
 
-    iptables -t nat -A REDSOCKS -p tcp -j REDIRECT --to-ports ${PORT}
+    nft add rule ip nat REDSOCKS ip protocol tcp counter redirect to :${PORT}
 
-    iptables -t nat -A PREROUTING -i ${INTERFACE} -p tcp -j REDSOCKS
+    nft add rule ip nat PREROUTING iifname "${INTERFACE}" ip protocol tcp counter jump REDSOCKS
 
-    iptables -A INPUT -i br-lan -p tcp --dport ${PORT} -j ACCEPT
+    nft add rule ip filter INPUT iifname "${INTERFACE}" tcp dport ${PORT} counter accept
 
     /bin/echo " done"
 }
 
-iptable_stop() {
-    /bin/echo -n "cleaning proxy bypass iptables ..."
+nftables_stop() {
+    /bin/echo -n "cleaning proxy bypass nftables ..."
 
     # Run iptable commands
-    iptables -t nat -F REDSOCKS
-    iptables -t nat -F PREROUTING
-    iptables -t nat -F POSTROUTING
-    iptables -F INPUT
-    iptables -F FORWARD
-    iptables -t nat -X REDSOCKS
+    nft delete rule ip nat PREROUTING handle $(nft -a list chain ip nat PREROUTING | grep "jump REDSOCKS" | grep -o 'handle [0-9]*' | grep -o '[0-9]*$') && nft delete chain ip nat REDSOCKS && nft delete rule ip filter INPUT handle $(nft -a list chain ip filter INPUT | grep "dport ${PORT}" | grep -o 'handle [0-9]*' | grep -o '[0-9]*$')
 
     /bin/echo " done"
 }
@@ -58,7 +53,7 @@ start() {
     /usr/sbin/redsocks -c /etc/redsocks.conf -p /var/run/redsocks.pid
 
     /bin/echo " done"
-    iptable_start
+    nftables_start
 }
 
 
@@ -75,7 +70,7 @@ stop() {
     rm /var/run/redsocks.pid
 
     echo " done"
-    iptable_stop
+    nftables_stop
 
     /bin/echo -n "restarting firewall ..."
     /etc/init.d/firewall restart &> /dev/null
