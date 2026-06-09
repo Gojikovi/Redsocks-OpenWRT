@@ -1,12 +1,13 @@
-[![Server Staus](https://uptime.betterstack.com/status-badges/v1/monitor/wayd.svg)](https://status.emon.one)
-
-# Redsocks OpenWRT
+# Redsocks OpenWRT 25.12
 Redsocks is a proxy tunneling extension. However, I found a very rare tutorial about how to configure Redsocks on an OpenWRT router. With this tutorial, we can use it on our OpenWRT router easily. It will be helpful for BDIX bypass users of Bangladesh who are using the socks5 proxy. To install and configure Redsocks, ensure you have installed OpenWrt on your router. Then run commands as follows:
 
 # One command run installation
+> [!WARNING]
+> If your OpenWRT version is older than 25.12, please DO NOT install Redsocks from this repository, the installation will fail. Use the original repository by [emonbhuiyan](https://github.com/emonbhuiyan/Redsocks-OpenWRT) instead.
+
 Run the following command to install Redsocks automatically:
 ```
-cd /tmp && wget https://github.com/emonbhuiyan/Redsocks-OpenWRT/raw/main/install.sh && chmod +x install.sh && clear && sh install.sh && rm install.sh && cd / && clear
+cd /tmp && wget https://github.com/Gojikovi/Redsocks-OpenWRT/raw/main/install.sh && chmod +x install.sh && clear && sh install.sh && rm install.sh && cd / && clear
 ```
 Just run it and wait for completion. And enjoy. [Click here to learn step by step manual installation](#manual-installation-step-by-step)
 
@@ -49,23 +50,18 @@ Manual installation step by step:
 =
 ### Step 1: Update your package manager
 ```
-opkg update
+apk update
 ```
-### Step 2: Install these 3 packages
+### Step 2: Install these 2 packages
 ```
-opkg install iptables iptables-mod-nat-extra redsocks
+apk add nftables redsocks
 ```
 
 ### Step 3: Then run this line
 ```
-service redsocks stop && mv /etc/redsocks.conf /etc/redsocks.conf.bkp && cd /etc && wget https://github.com/emonbhuiyan/Redsocks-OpenWRT/raw/main/redsocks.conf && mv /etc/init.d/redsocks /etc/init.d/redsocks.bkp && cd /etc/init.d && wget https://github.com/emonbhuiyan/Redsocks-OpenWRT/raw/main/redsocks && chmod +x /etc/init.d/redsocks
+service redsocks stop && mv /etc/redsocks.conf /etc/redsocks.conf.bkp && cd /etc && wget https://github.com/Gojikovi/Redsocks-OpenWRT/raw/main/redsocks.conf && mv /etc/init.d/redsocks /etc/init.d/redsocks.bkp && cd /etc/init.d && wget https://github.com/Gojikovi/Redsocks-OpenWRT/raw/main/redsocks && chmod +x /etc/init.d/redsocks
 ```
----
-<!-- GitAds-Verify: SS8CSW6KLS8JY2MR1O1P3MBYY9KN3PSL -->
-## GitAds Sponsored
-[![Sponsored by GitAds](https://gitads.dev/v1/ad-serve?source=emonbhuiyan/redsocks-openwrt@github)](https://gitads.dev/v1/ad-track?source=emonbhuiyan/redsocks-openwrt@github)
----
 
 [Click here to install with one command run](#one-command-run-installation)
 
-Thanks for following my tutorial. Follow me to get more interesting tips and tricks.
+Thanks for following my tutorial.
